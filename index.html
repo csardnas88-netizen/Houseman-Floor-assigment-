@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>HK Floor Assignment</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --gold: #C9A96E;
+    --gold-dark: #9B7A44;
+    --navy: #0F1E2E;
+    --navy-mid: #1A2F44;
+    --navy-light: #243D56;
+    --cream: #FAF7F2;
+    --text-light: #8FA3B8;
+    --text-mid: #C8D6E0;
+    --success: #4CAF89;
+    --danger: #E07070;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--cream);
+    min-height: 100vh;
+    padding-bottom: 48px;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(160deg, var(--navy-mid) 0%, var(--navy) 100%);
+    border-bottom: 1px solid rgba(201,169,110,0.2);
+    padding: 52px 20px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: 50%; transform: translateX(-50%);
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(201,169,110,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--cream);
+    line-height: 1.15;
+    font-style: italic;
+  }
+  .header h1 span { color: var(--gold); font-style: normal; }
+  .header-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-light);
+    font-weight: 300;
+  }
+
+  /* CONTAINER */
+  .container { padding: 20px 16px 0; max-width: 500px; margin: 0 auto; }
+
+  /* CARD */
+  .card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(201,169,110,0.15);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(201,169,110,0.15);
+  }
+  .card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .card-title-row .card-title { margin-bottom: 0; flex: 1; }
+
+  /* EDIT BUTTON */
+  .edit-btn {
+    background: none;
+    border: 1px solid rgba(201,169,110,0.3);
+    border-radius: 8px;
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .edit-btn:active { background: rgba(201,169,110,0.1); }
+
+  /* ROSTER */
+  .roster-list { display: flex; flex-direction: column; }
+  .roster-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(201,169,110,0.07);
+  }
+  .roster-row:last-child { border-bottom: none; }
+
+  .roster-check {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(201,169,110,0.25);
+    background: var(--navy-light);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 16px;
+    color: transparent;
+    transition: all 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .roster-check.on {
+    background: rgba(76,175,137,0.15);
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .roster-check.off {
+    background: rgba(224,112,112,0.12);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  .roster-info { flex: 1; }
+  .roster-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--cream);
+  }
+  .roster-name.absent {
+    color: var(--text-light);
+    text-decoration: line-through;
+  }
+  .roster-section {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  /* FLOOR GRID */
+  .floor-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 7px;
+  }
+  .floor-btn {
+    aspect-ratio: 1;
+    border-radius: 9px;
+    border: 1.5px solid rgba(201,169,110,0.2);
+    background: var(--navy-light);
+    color: var(--text-mid);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .floor-btn:active { transform: scale(0.93); }
+  .floor-btn.out {
+    background: rgba(224,112,112,0.18);
+    border-color: var(--danger);
+    color: var(--danger);
+    font-weight: 600;
+  }
+  .floor-btn.out::after {
+    content: '✕';
+    position: absolute;
+    font-size: 8px;
+    top: 3px; right: 3px;
+    opacity: 0.7;
+  }
+
+  /* OOS SUMMARY */
+  .oos-summary {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-light);
+    min-height: 18px;
+  }
+  .oos-summary span { color: var(--danger); font-weight: 500; }
+
+  /* ACTION BUTTONS */
+  .btn-row { display: flex; gap: 10px; margin-top: 4px; }
+  .btn {
+    flex: 1;
+    height: 56px;
+    border-radius: 14px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.18s;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--navy);
+    box-shadow: 0 4px 18px rgba(201,169,110,0.28);
+  }
+  .btn-secondary {
+    background: var(--navy-light);
+    color: var(--text-mid);
+    border: 1px solid rgba(201,169,110,0.15);
+  }
+
+  /* RESULTS */
+  #results { margin-top: 4px; }
+
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-box {
+    flex: 1;
+    background: var(--navy-mid);
+    border: 1px solid rgba(201,169,110,0.15);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .stat-box.excluded .stat-num { color: var(--danger); }
+  .stat-box.active .stat-num { color: var(--success); }
+
+  /* RESULT CARDS */
+  .hk-card {
+    background: var(--navy-mid);
+    border: 1px solid rgba(201,169,110,0.15);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    animation: slideIn 0.3s ease both;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .hk-avatar {
+    width: 46px; height: 46px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, var(--navy-light), var(--navy));
+    border: 1.5px solid rgba(201,169,110,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-style: italic;
+    color: var(--gold);
+    flex-shrink: 0;
+    letter-spacing: -1px;
+  }
+  .hk-info { flex: 1; min-width: 0; }
+  .hk-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+  .hk-section-tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: rgba(201,169,110,0.1);
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 5px;
+    padding: 2px 8px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .hk-count {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-bottom: 10px;
+  }
+  .hk-count strong {
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .floors-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    background: var(--navy-light);
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cream);
+  }
+
+  .results-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-light);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  /* EDIT NAMES MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8,16,28,0.88);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--navy-mid);
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 20px 44px;
+    width: 100%;
+    max-width: 500px;
+    animation: slideUp 0.28s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: rgba(201,169,110,0.25);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+  .modal-sub {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+  .modal-field { margin-bottom: 12px; }
+  .modal-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .modal-input {
+    width: 100%;
+    background: var(--navy-light);
+    border: 1px solid rgba(201,169,110,0.2);
+    border-radius: 10px;
+    color: var(--cream);
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    padding: 12px 14px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .modal-input:focus { border-color: var(--gold); }
+  .modal-btn-row { display: flex; gap: 10px; margin-top: 22px; }
+  .modal-save {
+    flex: 2; height: 52px;
+    border-radius: 13px; border: none;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--navy);
+    font-size: 15px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+  }
+  .modal-cancel {
+    flex: 1; height: 52px;
+    border-radius: 13px;
+    border: 1px solid rgba(201,169,110,0.15);
+    background: var(--navy-light);
+    color: var(--text-mid);
+    font-size: 15px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">Housekeeping Operations</div>
+  <h1>Floor <span>Assignment</span></h1>
+  <div class="header-sub">Daily Trash Removal · Floors 2 – 22</div>
+</div>
+
+<div class="container">
+
+  <!-- TEAM ROSTER -->
+  <div class="card">
+    <div class="card-title-row">
+      <div class="card-title">Team on Duty</div>
+      <button class="edit-btn" onclick="openModal()">✎ Edit Names</button>
+    </div>
+    <div class="roster-list" id="rosterList"></div>
+  </div>
+
+  <!-- OUT OF SERVICE FLOORS -->
+  <div class="card">
+    <div class="card-title">Out of Service Floors</div>
+    <div class="floor-grid" id="floorGrid"></div>
+    <div class="oos-summary" id="oosSummary">Tap floors to mark as out of service.</div>
+  </div>
+
+  <!-- BUTTONS -->
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results"></div>
+
+</div>
+
+<!-- EDIT NAMES MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Team Names</div>
+    <div class="modal-sub">Actualiza los nombres cuando el equipo rote cada 4 meses.</div>
+    <div id="modalFields"></div>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-save" onclick="saveNames()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ALL_FLOORS = Array.from({length: 21}, (_, i) => i + 2); // 2–22
+
+  // ── TEAM DATA — Correct order per section ─────────────────
+  let roster = [
+    { name: 'Jorge',    section: '2nd – 5th',   active: true },
+    { name: 'Mauricia', section: '6th – 9th',   active: true },
+    { name: 'Vanessa',  section: '10th – 13th', active: true },
+    { name: 'Elmer',    section: '14th – 17th', active: true },
+    { name: 'David',    section: '18th – 22nd', active: true },
+  ];
+
+  let outOfService = new Set();
+
+  // ── RENDER ROSTER ─────────────────────────────────────────
+  function renderRoster() {
+    const list = document.getElementById('rosterList');
+    list.innerHTML = '';
+    roster.forEach((hm, i) => {
+      const row = document.createElement('div');
+      row.className = 'roster-row';
+      row.innerHTML = `
+        <div class="roster-check ${hm.active ? 'on' : 'off'}"
+             onclick="toggleActive(${i})"
+             title="${hm.active ? 'Present – tap to mark absent' : 'Absent – tap to mark present'}">
+          ${hm.active ? '✓' : '✕'}
+        </div>
+        <div class="roster-info">
+          <div class="roster-name${hm.active ? '' : ' absent'}">${hm.name}</div>
+          <div class="roster-section">Section: ${hm.section}</div>
+        </div>`;
+      list.appendChild(row);
+    });
+  }
+
+  function toggleActive(i) {
+    roster[i].active = !roster[i].active;
+    renderRoster();
+  }
+
+  // ── EDIT NAMES MODAL ──────────────────────────────────────
+  function openModal() {
+    const fields = document.getElementById('modalFields');
+    fields.innerHTML = roster.map((hm, i) => `
+      <div class="modal-field">
+        <div class="modal-label">Posición ${i+1} · ${hm.section}</div>
+        <input class="modal-input" id="nameInput_${i}" value="${hm.name}" placeholder="Nombre del houseman" autocomplete="off">
+      </div>`).join('');
+    document.getElementById('modalOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('nameInput_0').focus(), 100);
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  function saveNames() {
+    roster.forEach((hm, i) => {
+      const val = (document.getElementById(`nameInput_${i}`).value || '').trim();
+      if (val) hm.name = val;
+    });
+    closeModal();
+    renderRoster();
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // ── FLOOR GRID ────────────────────────────────────────────
+  const grid = document.getElementById('floorGrid');
+  ALL_FLOORS.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'floor-btn';
+    btn.textContent = f;
+    btn.dataset.floor = f;
+    btn.setAttribute('aria-label', 'Floor ' + f);
+    btn.addEventListener('click', () => toggleFloor(f, btn));
+    grid.appendChild(btn);
+  });
+
+  function toggleFloor(floor, btn) {
+    if (outOfService.has(floor)) {
+      outOfService.delete(floor);
+      btn.classList.remove('out');
+    } else {
+      outOfService.add(floor);
+      btn.classList.add('out');
+    }
+    updateOOSSummary();
+  }
+
+  function updateOOSSummary() {
+    const el = document.getElementById('oosSummary');
+    if (outOfService.size === 0) {
+      el.innerHTML = 'Tap floors to mark as out of service.';
+    } else {
+      const sorted = [...outOfService].sort((a,b) => a-b);
+      el.innerHTML = `<span>${outOfService.size} floor${outOfService.size>1?'s':''} out of service:</span> ${sorted.join(', ')}`;
+    }
+  }
+
+  // ── RESET ─────────────────────────────────────────────────
+  function resetAll() {
+    outOfService.clear();
+    document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('out'));
+    roster.forEach(hm => hm.active = true);
+    renderRoster();
+    updateOOSSummary();
+    document.getElementById('results').innerHTML = '';
+  }
+
+  // ── CALCULATE ─────────────────────────────────────────────
+  function calculate() {
+    const activeRoster  = roster.filter(hm => hm.active);
+    const housemenCount = activeRoster.length;
+
+    if (housemenCount === 0) {
+      document.getElementById('results').innerHTML =
+        `<div style="margin-top:20px;" class="empty">No hay housemen activos. Activa al menos uno en el equipo.</div>`;
+      return;
+    }
+
+    const activeFloors  = ALL_FLOORS.filter(f => !outOfService.has(f));
+    const totalActive   = activeFloors.length;
+    const totalExcluded = outOfService.size;
+
+    if (totalActive === 0) {
+      document.getElementById('results').innerHTML =
+        `<div style="margin-top:20px;" class="empty">No hay pisos activos para asignar.</div>`;
+      return;
+    }
+
+    // Fair distribution
+    const base   = Math.floor(totalActive / housemenCount);
+    const extras = totalActive % housemenCount;
+    const assignments = [];
+    let idx = 0;
+    for (let h = 0; h < housemenCount; h++) {
+      const count = base + (h < extras ? 1 : 0);
+      assignments.push({ hm: activeRoster[h], floors: activeFloors.slice(idx, idx + count) });
+      idx += count;
+    }
+
+    const initials = name =>
+      name.trim().split(/\s+/).map(w => w[0].toUpperCase()).join('').slice(0, 2);
+
+    const cardsHTML = assignments.map(({hm, floors}, i) => {
+      const n = floors.length;
+      const chips = n === 0
+        ? '<span style="color:var(--text-light);font-style:italic;font-size:13px;">Sin pisos asignados</span>'
+        : floors.map(f => `<span class="chip">${f}</span>`).join('');
+      return `
+        <div class="hk-card" style="animation-delay:${0.06*(i+1)}s">
+          <div class="hk-avatar">${initials(hm.name)}</div>
+          <div class="hk-info">
+            <div class="hk-name">${hm.name}</div>
+            <div class="hk-section-tag">${hm.section}</div>
+            <div class="hk-count"><strong>${n}</strong> floor${n!==1?'s':''} assigned</div>
+            <div class="floors-chips">${chips}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('results').innerHTML = `
+      <div style="margin-top:20px;">
+        <div class="stats-row">
+          <div class="stat-box active">
+            <div class="stat-num">${totalActive}</div>
+            <div class="stat-label">Active Floors</div>
+          </div>
+          <div class="stat-box excluded">
+            <div class="stat-num">${totalExcluded}</div>
+            <div class="stat-label">Excluded</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num">${housemenCount}</div>
+            <div class="stat-label">On Duty</div>
+          </div>
+        </div>
+        <div class="results-title">Assignment Breakdown</div>
+        ${cardsHTML}
+      </div>`;
+
+    setTimeout(() => {
+      document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+
+  // ── INIT ──────────────────────────────────────────────────
+  renderRoster();
+</script>
+</body>
+</html>
